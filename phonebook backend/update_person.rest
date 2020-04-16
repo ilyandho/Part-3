@@ -1,7 +1,6 @@
-PUT  http://localhost:1000/api/persons/5e95d85f5fdcbb1f2858f0da
+PUT  http://localhost:1000/api/persons/5e96086e359e9b038ccbce85
 Content-Type: application/json
 
- {
-    "name": "Arto Hells",
-    "number": "040+  7"
+ {  "name":"Ilyas12",
+    "number": "00200000"
   }

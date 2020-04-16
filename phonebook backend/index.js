@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const morgan = require("morgan");
 const mongoose = require("mongoose");
+const uniqueValidator = require("mongoose-unique-validator");
 const cors = require("cors");
 
 const app = express();
@@ -16,6 +17,7 @@ morgan.token("body", function (req, res, param) {
 });
 
 mongoose.set("useFindAndModify", false);
+mongoose.set("useCreateIndex", true);
 
 mongoose
   .connect(process.env.MONGODB_URI, {
@@ -28,8 +30,19 @@ mongoose
   );
 
 const personSchema = new mongoose.Schema({
-  name: String,
-  number: String,
+  name: {
+    type: String,
+    minlength: 3,
+    unique: true,
+    uniqueCaseInsensitive: true,
+  },
+  number: {
+    type: Number,
+    minlength: 8,
+  },
+});
+personSchema.plugin(uniqueValidator, {
+  message: "Error, expected '{PATH}' to be unique.",
 });
 
 // Remove the _V field and _id
@@ -112,9 +125,13 @@ app.put("/api/persons/:id", (req, res, next) => {
     number,
   };
 
-  Person.findOneAndUpdate(req.params.id, person, { new: true })
+  Person.findOneAndUpdate({ _id: req.params.id }, person, {
+    runValidators: true,
+    context: "query",
+    new: true,
+  })
     .then((updated) => {
-      // console.log("response", response);
+      console.log("response", updated);
       res.json(updated);
     })
     .catch((err) => next(err));
@@ -136,9 +153,11 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === "CastError") {
     return response.status(400).send({ error: "malformatted id" });
+  } else if (error.name === "ValidationError") {
+    return response.status(400).json({ message: error.message });
   }
 
-  next(error);
+  next();
 };
 
 app.use(errorHandler);
