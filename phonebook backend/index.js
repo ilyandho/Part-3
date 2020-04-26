@@ -1,32 +1,44 @@
-require("dotenv").config();
-const express = require("express");
-const morgan = require("morgan");
-const mongoose = require("mongoose");
-const uniqueValidator = require("mongoose-unique-validator");
-const cors = require("cors");
+/* eslint-disable function-paren-newline */
+/* eslint-disable implicit-arrow-linebreak */
+/* eslint-disable consistent-return */
+/* eslint-disable no-underscore-dangle */
+/* eslint-disable no-param-reassign */
+/* eslint-disable func-names */
+/* eslint-disable comma-dangle */
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-console */
+require('dotenv').config();
+const express = require('express');
+const morgan = require('morgan');
+const mongoose = require('mongoose');
+const uniqueValidator = require('mongoose-unique-validator');
+
+const cors = require('cors');
+// importScripts;
 
 const app = express();
 
 app.use(cors());
-app.use(express.static("build"));
+app.use(express.static('build'));
 app.use(express.json());
 
-morgan.token("body", function (req, res, param) {
+// eslint-disable-next-line prefer-arrow-callback
+morgan.token('body', function (req, res, param) {
   console.log(req.body);
   return JSON.stringify(req.body);
 });
 
-mongoose.set("useFindAndModify", false);
-mongoose.set("useCreateIndex", true);
+mongoose.set('useFindAndModify', false);
+mongoose.set('useCreateIndex', true);
 
 mongoose
   .connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then((response) => console.log(`Connected to the database`))
+  .then((response) => console.log('Connected to the database'))
   .catch((err) =>
-    console.log(`An error occured while connecting to the database`)
+    console.log('An error occured while connecting to the database')
   );
 
 const personSchema = new mongoose.Schema({
@@ -37,7 +49,7 @@ const personSchema = new mongoose.Schema({
     uniqueCaseInsensitive: true,
   },
   number: {
-    type: Number,
+    type: String,
     minlength: 8,
   },
 });
@@ -47,7 +59,7 @@ personSchema.plugin(uniqueValidator, {
 
 // Remove the _V field and _id
 // Change the _id which is an object to id
-personSchema.set("toJSON", {
+personSchema.set('toJSON', {
   transform: (document, returnedObject) => {
     returnedObject.id = returnedObject._id.toString();
     delete returnedObject._id;
@@ -55,13 +67,13 @@ personSchema.set("toJSON", {
   },
 });
 
-const Person = mongoose.model("Person", personSchema);
+const Person = mongoose.model('Person', personSchema);
 
 app.use(
-  morgan(":method :url :status :res[content-length] - :response-time ms :body")
+  morgan(':method :url :status :res[content-length] - :response-time ms :body')
 );
 
-app.get("/info", (req, res, next) => {
+app.get('/info', (req, res, next) => {
   Person.find()
     .then((response) => {
       const date = new Date();
@@ -71,7 +83,7 @@ app.get("/info", (req, res, next) => {
     .catch((err) => next(err));
 });
 
-app.get("/api/persons", (req, res, next) => {
+app.get('/api/persons', (req, res, next) => {
   Person.find()
     .then((response) =>
       res.status(200).json(response.map((person) => person.toJSON()))
@@ -79,10 +91,11 @@ app.get("/api/persons", (req, res, next) => {
     .catch((err) => next(err));
 });
 
-app.post("/api/persons/", (req, res, next) => {
+// eslint-disable-next-line consistent-return
+app.post('/api/persons/', (req, res, next) => {
   if (!req.body) {
     return res.status(400).json({
-      error: "content missing",
+      error: 'content missing',
     });
   }
 
@@ -90,7 +103,7 @@ app.post("/api/persons/", (req, res, next) => {
 
   if (!name || !number) {
     return res.status(400).json({
-      error: "name and number must be provided",
+      error: 'name and number must be provided',
     });
   }
 
@@ -105,16 +118,16 @@ app.post("/api/persons/", (req, res, next) => {
     .catch((err) => next(err));
 });
 
-app.get("/api/persons/:id", (req, res, next) => {
+app.get('/api/persons/:id', (req, res, next) => {
   Person.findById({ _id: req.params.id })
     .then((response) => res.status(200).json(response))
     .catch((err) => next(err));
 });
 
-app.put("/api/persons/:id", (req, res, next) => {
+app.put('/api/persons/:id', (req, res, next) => {
   if (!req.body) {
     return res.status(400).json({
-      error: "content missing",
+      error: 'content missing',
     });
   }
 
@@ -127,23 +140,23 @@ app.put("/api/persons/:id", (req, res, next) => {
 
   Person.findOneAndUpdate({ _id: req.params.id }, person, {
     runValidators: true,
-    context: "query",
+    context: 'query',
     new: true,
   })
     .then((updated) => {
-      console.log("response", updated);
+      console.log('response', updated);
       res.json(updated);
     })
     .catch((err) => next(err));
 });
-app.delete("/api/persons/:id", (req, res, next) => {
+app.delete('/api/persons/:id', (req, res, next) => {
   Person.findByIdAndDelete(req.params.id)
     .then((response) => res.status(204).end())
     .catch((err) => next(err));
 });
 
 const unknownEndpoint = (request, response) => {
-  response.status(404).send({ error: "unknown endpoint" });
+  response.status(404).send({ error: 'unknown endpoint' });
 };
 
 app.use(unknownEndpoint);
@@ -151,9 +164,10 @@ app.use(unknownEndpoint);
 const errorHandler = (error, request, response, next) => {
   console.error(error.message);
 
-  if (error.name === "CastError") {
-    return response.status(400).send({ error: "malformatted id" });
-  } else if (error.name === "ValidationError") {
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' });
+  }
+  if (error.name === 'ValidationError') {
     return response.status(400).json({ message: error.message });
   }
 
